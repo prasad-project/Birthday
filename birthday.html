@@ -121,7 +121,6 @@
             background: radial-gradient(circle at center, #231145 0%, #0a031c 100%);
         }
 
-        /* Puzzle interaction styling */
         .puzzle-node {
             cursor: pointer;
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s;
@@ -289,7 +288,7 @@
             <p class="text-[11px] text-slate-400 font-semibold mb-2">✨ Tip: Tap/click stars directly to reveal cosmic secrets!</p>
         </div>
 
-        <!-- LEVEL 2 REWARD (Show star memory message cards) -->
+        <!-- LEVEL 2 REWARD -->
         <div id="screen-level2-reward" class="screen flex-1 flex flex-col items-center justify-center p-8 text-center">
             <div class="w-full max-h-[90%] overflow-y-auto premium-glass p-8 border border-brandRoseGold/30 rounded-3xl shadow-xl flex flex-col items-center">
                 <span class="text-3xl mb-4">🌟</span>
@@ -1094,13 +1093,12 @@
                 x: l1Canvas.width / 2,
                 y: l1Canvas.height / 2,
                 radius: 12,
-                speed: 6.0, // Increased speed for snappy movement
-                targetX: undefined, // Click/Tap glide coordinate
+                speed: 6.0, 
+                targetX: undefined, 
                 targetY: undefined
             };
 
             l1Cakes = [];
-            // Hand-spawn 5 pieces of cake at distinct coordinates
             for (let i = 0; i < 5; i++) {
                 l1Cakes.push({
                     x: Math.random() * (l1Canvas.width - 60) + 30,
