@@ -1,0 +1,2086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The Birthday Adventure ✨</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Elegant Font Pairings (Google Fonts) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- TailWind Custom Styles / Utilities -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Playfair Display"', 'serif'],
+                        sans: ['"Quicksand"', 'sans-serif'],
+                    },
+                    colors: {
+                        brandPink: '#FFB6C1',
+                        brandLavender: '#C8A2FF',
+                        brandPeach: '#FFD6A5',
+                        brandGold: '#FFD700',
+                        brandRoseGold: '#E6B8A2',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(230, 184, 162, 0.45);
+            --glow-color: rgba(255, 182, 193, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(135deg, #FFEBEF 0%, #E8E5FF 50%, #FFEED6 100%);
+            background-size: 400% 400%;
+            animation: auroraGlow 20s ease infinite;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes auroraGlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .premium-glass {
+            background: rgba(255, 255, 255, 0.38);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1.5px solid var(--glass-border);
+            box-shadow: 0 24px 60px rgba(230, 184, 162, 0.15), 
+                        inset 0 1px 2px rgba(255, 255, 255, 0.5);
+            border-radius: 32px;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .float-gentle {
+            animation: floatGentle 6s ease-in-out infinite;
+        }
+
+        @keyframes floatGentle {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(1.5deg); }
+        }
+
+        .sparkle-slow {
+            animation: sparkleSlow 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes sparkleSlow {
+            0% { opacity: 0.3; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.1); filter: drop-shadow(0 0 10px #FFD700); }
+        }
+
+        .screen {
+            display: none;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .text-rose-gold-gradient {
+            background: linear-gradient(135deg, #8E5B4B 0%, #D49B85 50%, #B37D6B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .cosmic-gradient {
+            background: radial-gradient(circle at center, #231145 0%, #0a031c 100%);
+        }
+
+        /* Puzzle interaction styling */
+        .puzzle-node {
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s;
+        }
+
+        .puzzle-node:active {
+            transform: scale(0.9);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Floating Particles Base -->
+    <canvas id="particle-canvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-0"></canvas>
+
+    <!-- App Shell Wrapper -->
+    <div class="screen-container relative z-10 w-full h-full max-w-[480px] max-h-[850px] md:h-[92vh] premium-glass flex flex-col overflow-hidden">
+        
+        <!-- Global HUD Widget Overlay -->
+        <div class="absolute top-5 left-5 right-5 flex justify-between items-center z-50">
+            <div class="flex items-center gap-2">
+                <button class="control-btn w-10 h-10 rounded-full bg-white/40 border border-brandRoseGold/30 flex items-center justify-center shadow-sm backdrop-blur-md active:scale-95 transition-transform text-lg" id="music-toggle" aria-label="Mute sound" title="Toggle music">
+                    🎵
+                </button>
+                <button class="control-btn w-10 h-10 rounded-full bg-white/40 border border-brandRoseGold/30 flex items-center justify-center shadow-sm backdrop-blur-md active:scale-95 transition-transform text-lg" id="restart-game" aria-label="Restart journey" title="Restart Game">
+                    🔄
+                </button>
+            </div>
+            
+            <div id="hud-level-badge" class="hidden px-4 py-1.5 rounded-full bg-white/50 border border-brandRoseGold/30 text-[10px] font-bold tracking-widest text-brandRoseGold uppercase shadow-sm">
+                LEVEL 1
+            </div>
+        </div>
+
+        <!-- SCREEN 0: CINEMATIC INTRO -->
+        <div id="screen-intro" class="screen active flex-1 flex flex-col justify-center items-center p-8 text-center cosmic-gradient text-white">
+            <div class="space-y-6 max-w-sm">
+                <p id="intro-text" class="font-serif text-2xl md:text-3xl italic tracking-wide text-brandPeach opacity-0 transition-opacity duration-1000 leading-relaxed"></p>
+                <div class="h-10">
+                    <button id="btn-skip-intro" class="hidden text-[10px] tracking-widest text-white/40 hover:text-white/70 uppercase transition-all">Skip Intro</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 1: LANDING PAGE -->
+        <div id="screen-landing" class="screen flex-1 flex flex-col justify-between p-8 pt-24 text-center">
+            <div class="relative flex-1 flex flex-col items-center justify-center my-auto">
+                <div class="absolute inset-0 pointer-events-none opacity-40">
+                    <svg class="absolute top-4 left-10 sparkle-slow" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 0L15.5 8.5L24 12L15.5 15.5L12 24L8.5 15.5L0 12L8.5 8.5L12 0Z" fill="#FFD700"/></svg>
+                    <svg class="absolute bottom-10 right-8 sparkle-slow" style="animation-delay: 1.5s" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 0L15.5 8.5L24 12L15.5 15.5L12 24L8.5 15.5L0 12L8.5 8.5L12 0Z" fill="#FFD700"/></svg>
+                </div>
+
+                <div class="mb-2">
+                    <span class="inline-block px-3 py-1 bg-white/40 border border-brandRoseGold/20 rounded-full text-[10px] font-bold tracking-widest text-[#B37D6B] uppercase mb-4">
+                        Exclusive Invitation
+                    </span>
+                </div>
+
+                <h1 class="font-serif text-[38px] leading-tight text-rose-gold-gradient font-bold tracking-tight mb-2 float-gentle">
+                    The Birthday<br>Adventure
+                </h1>
+                
+                <p id="typewriter-text" class="text-[11px] tracking-wider text-purple-900/60 font-semibold h-6 uppercase"></p>
+
+                <div class="relative w-44 h-44 my-4 flex items-center justify-center">
+                    <div class="absolute w-40 h-40 rounded-full bg-gradient-to-tr from-brandPink to-brandPeach opacity-25 filter blur-xl animate-pulse"></div>
+                    <svg class="relative z-10 drop-shadow-xl float-gentle" style="animation-duration: 5s" width="120" height="120" viewBox="0 0 100 100">
+                        <ellipse cx="50" cy="78" rx="35" ry="10" fill="#E6B8A2" opacity="0.3"/>
+                        <rect x="22" y="42" width="56" height="30" fill="#FFF2F4" rx="6"/>
+                        <rect x="22" y="52" width="56" height="8" fill="#FFB6C1" opacity="0.5"/>
+                        <ellipse cx="50" cy="42" rx="28" ry="8" fill="#FFF"/>
+                        <rect x="32" y="24" width="36" height="18" fill="#FFE5EA" rx="4"/>
+                        <ellipse cx="50" cy="24" rx="18" ry="6" fill="#FFB6C1"/>
+                        <rect x="48" y="10" width="4" height="14" fill="#C8A2FF" rx="1"/>
+                        <path class="sparkle-slow" d="M50 2 C53 6, 47 8, 50 2 Z" fill="#FFD700"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="w-full flex flex-col items-center gap-4 mt-auto">
+                <div class="w-full relative px-2">
+                    <input type="text" id="player-name" class="w-full px-6 py-4 rounded-2xl bg-white/60 border border-brandRoseGold/35 text-center font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-brandPink focus:bg-white shadow-sm transition-all text-sm" placeholder="Tell us your name..." maxlength="12" value="Birthday Girl">
+                    <div class="absolute right-6 top-4 opacity-40">✨</div>
+                </div>
+
+                <button id="btn-start" class="w-full py-4 rounded-2xl bg-gradient-to-r from-brandPink to-brandPeach text-white font-bold tracking-wider shadow-lg shadow-brandPink/30 hover:shadow-brandPink/40 transition-all border border-white/20 active:scale-[0.98]">
+                    Begin Adventure
+                </button>
+            </div>
+        </div>
+
+        <!-- LEVEL 1: THE LOST CAKE -->
+        <div id="screen-level1" class="screen flex-1 flex flex-col justify-between p-6 pt-24 text-center">
+            <div class="w-full flex flex-col gap-1 items-center z-20">
+                <div class="text-[20px] font-serif font-bold text-slate-800">Level 1: The Lost Cake</div>
+                <div class="text-xs text-slate-500 font-medium">Explore the landscape. Find all 5 hidden cake pieces!</div>
+                
+                <div class="w-full flex justify-between text-[11px] font-bold text-slate-500 mt-3 px-1">
+                    <span id="l1-score">Collected: 0/5</span>
+                    <span class="text-brandRoseGold">Target: 5</span>
+                </div>
+                <div class="w-full h-1.5 bg-slate-200/50 rounded-full overflow-hidden mt-1 p-[1px] border border-white/30">
+                    <div id="l1-progress" class="h-full rounded-full bg-gradient-to-r from-brandPink to-brandPeach" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Game World Frame -->
+            <div class="game-canvas-container flex-1 w-full flex relative rounded-2xl overflow-hidden bg-gradient-to-b from-emerald-50/50 to-amber-50/50 border border-brandRoseGold/20 my-5 shadow-inner">
+                <canvas id="level1-canvas" class="w-full h-full block cursor-pointer"></canvas>
+                
+                <!-- Mobile D-Pad controls -->
+                <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-4 z-30 pointer-events-none px-4">
+                    <button id="l1-btn-left" class="touch-btn pointer-events-auto w-12 h-12 rounded-full bg-white/80 border border-brandRoseGold/30 flex items-center justify-center text-md shadow-md active:bg-brandPink active:text-white transition-all transform active:scale-90">◀</button>
+                    <div class="flex flex-col gap-4">
+                        <button id="l1-btn-up" class="touch-btn pointer-events-auto w-12 h-12 rounded-full bg-white/80 border border-brandRoseGold/30 flex items-center justify-center text-md shadow-md active:bg-brandPink active:text-white transition-all transform active:scale-90">▲</button>
+                        <button id="l1-btn-down" class="touch-btn pointer-events-auto w-12 h-12 rounded-full bg-white/80 border border-brandRoseGold/30 flex items-center justify-center text-md shadow-md active:bg-brandPink active:text-white transition-all transform active:scale-90">▼</button>
+                    </div>
+                    <button id="l1-btn-right" class="touch-btn pointer-events-auto w-12 h-12 rounded-full bg-white/80 border border-brandRoseGold/30 flex items-center justify-center text-md shadow-md active:bg-brandPink active:text-white transition-all transform active:scale-90">▶</button>
+                </div>
+            </div>
+            <p class="text-[11px] text-slate-400 font-semibold mb-2">✨ Tip: Tap directly on the map to glide, or use Arrow Keys!</p>
+        </div>
+
+        <!-- LEVEL 1 REWARD -->
+        <div id="screen-level1-reward" class="screen flex-1 flex flex-col items-center justify-center p-8 text-center">
+            <div class="w-full max-h-[90%] overflow-y-auto premium-glass p-8 border border-brandRoseGold/30 rounded-3xl shadow-xl flex flex-col items-center">
+                <span class="text-3xl mb-4">🍰</span>
+                <h2 class="font-serif text-2xl font-bold text-rose-gold-gradient mb-4">First Memory Unlocked</h2>
+                
+                <div class="w-16 h-16 rounded-full bg-brandPeach/20 flex items-center justify-center mb-6 sparkle-slow">
+                    <span class="text-2xl">✨</span>
+                </div>
+
+                <div class="sweet-letter border-l-4 border-brandPink pl-4 text-left italic text-slate-600 text-sm leading-relaxed mb-6">
+                    "Dearest <span class="placeholder-name">Birthday Girl</span>,<br><br>
+                    You have found the lost sweetness! Just like the pieces of this cake, every beautiful moment we share is made of bright colors, joy, and delicious warmth. Let's head for the stars next!"
+                </div>
+
+                <button id="btn-to-level2" class="w-full py-4 rounded-xl bg-gradient-to-r from-brandPink to-brandPeach text-white font-bold text-xs tracking-widest uppercase shadow-md active:scale-95 transition-transform">
+                    Unlock Level 2: Memory Stars
+                </button>
+            </div>
+        </div>
+
+        <!-- LEVEL 2: MEMORY STARS -->
+        <div id="screen-level2" class="screen flex-1 flex flex-col justify-between p-6 pt-24 text-center">
+            <div class="w-full flex flex-col gap-1 items-center z-20">
+                <div class="text-[20px] font-serif font-bold text-slate-800">Level 2: Memory Stars</div>
+                <div class="text-xs text-slate-500 font-medium">Click floating stars to catch them & uncover sweet messages!</div>
+                
+                <div class="w-full flex justify-between text-[11px] font-bold text-slate-500 mt-3 px-1">
+                    <span id="l2-score">Collected: 0/5</span>
+                    <span class="text-brandRoseGold">Target: 5</span>
+                </div>
+                <div class="w-full h-1.5 bg-slate-200/50 rounded-full overflow-hidden mt-1 p-[1px] border border-white/30">
+                    <div id="l2-progress" class="h-full rounded-full bg-gradient-to-r from-brandLavender to-brandPink" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- Stars Canvas -->
+            <div class="game-canvas-container flex-1 w-full flex relative rounded-2xl overflow-hidden bg-gradient-to-b from-[#110B29] to-[#251A4D] border border-brandRoseGold/20 my-5 shadow-inner cursor-pointer">
+                <canvas id="level2-canvas" class="w-full h-full block"></canvas>
+            </div>
+            
+            <p class="text-[11px] text-slate-400 font-semibold mb-2">✨ Tip: Tap/click stars directly to reveal cosmic secrets!</p>
+        </div>
+
+        <!-- LEVEL 2 REWARD (Show star memory message cards) -->
+        <div id="screen-level2-reward" class="screen flex-1 flex flex-col items-center justify-center p-8 text-center">
+            <div class="w-full max-h-[90%] overflow-y-auto premium-glass p-8 border border-brandRoseGold/30 rounded-3xl shadow-xl flex flex-col items-center">
+                <span class="text-3xl mb-4">🌟</span>
+                <h2 class="font-serif text-2xl font-bold text-rose-gold-gradient mb-4">Sky Star Unwrapped</h2>
+                
+                <div id="star-message-container" class="space-y-4 w-full mb-6 text-left">
+                    <!-- Compliment messages populated dynamically from JavaScript -->
+                </div>
+
+                <button id="btn-to-level3" class="w-full py-4 rounded-xl bg-gradient-to-r from-brandLavender to-brandPink text-white font-bold text-xs tracking-widest uppercase shadow-md active:scale-95 transition-transform">
+                    Enter Level 3: Heart Maze
+                </button>
+            </div>
+        </div>
+
+        <!-- LEVEL 3: HEART MAZE -->
+        <div id="screen-level3" class="screen flex-1 flex flex-col justify-between p-6 pt-24 text-center">
+            <div class="w-full flex flex-col gap-1 items-center z-20">
+                <div class="text-[20px] font-serif font-bold text-slate-800">Level 3: Heart Maze</div>
+                <div class="text-xs text-slate-500 font-medium">Guide the glowing heart through the puzzle grid to the exit!</div>
+                
+                <div class="w-full flex justify-between text-[11px] font-bold text-slate-500 mt-3 px-1">
+                    <span id="l3-timer">Maze Time: 0s</span>
+                    <span id="l3-hearts-indicator" class="text-red-400">Hearts Collected</span>
+                </div>
+            </div>
+
+            <!-- Maze Frame -->
+            <div class="game-canvas-container flex-1 w-full flex relative rounded-2xl overflow-hidden bg-gradient-to-b from-rose-50/50 to-pink-100/50 border border-brandRoseGold/20 my-5 shadow-inner">
+                <canvas id="level3-canvas" class="w-full h-full block"></canvas>
+                
+                <!-- D-Pad Controls for Maze -->
+                <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-4 z-30 pointer-events-none px-4">
+                    <button id="l3-btn-left" class="touch-btn pointer-events-auto w-12 h-12 rounded-full bg-white/80 border border-brandRoseGold/30 flex items-center justify-center text-md shadow-md active:bg-brandPink active:text-white transition-all transform active:scale-90">◀</button>
+                    <div class="flex flex-col gap-4">
+                        <button id="l3-btn-up" class="touch-btn pointer-events-auto w-12 h-12 rounded-full bg-white/80 border border-brandRoseGold/30 flex items-center justify-center text-md shadow-md active:bg-brandPink active:text-white transition-all transform active:scale-90">▲</button>
+                        <button id="l3-btn-down" class="touch-btn pointer-events-auto w-12 h-12 rounded-full bg-white/80 border border-brandRoseGold/30 flex items-center justify-center text-md shadow-md active:bg-brandPink active:text-white transition-all transform active:scale-90">▼</button>
+                    </div>
+                    <button id="l3-btn-right" class="touch-btn pointer-events-auto w-12 h-12 rounded-full bg-white/80 border border-brandRoseGold/30 flex items-center justify-center text-md shadow-md active:bg-brandPink active:text-white transition-all transform active:scale-90">▶</button>
+                </div>
+            </div>
+            <p class="text-[11px] text-slate-400 font-semibold mb-2">⌨️ PC Tip: Use Arrow Keys or WASD keys</p>
+        </div>
+
+        <!-- LEVEL 3 REWARD -->
+        <div id="screen-level3-reward" class="screen flex-1 flex flex-col items-center justify-center p-8 text-center">
+            <div class="w-full max-h-[90%] overflow-y-auto premium-glass p-8 border border-brandRoseGold/30 rounded-3xl shadow-xl flex flex-col items-center">
+                <span class="text-3xl mb-4">💖</span>
+                <h2 class="font-serif text-2xl font-bold text-rose-gold-gradient mb-4">Maze Conquered</h2>
+                
+                <div class="w-16 h-16 rounded-full bg-brandPink/20 flex items-center justify-center mb-6 sparkle-slow">
+                    <span class="text-2xl">🗝️</span>
+                </div>
+
+                <div class="sweet-letter border-l-4 border-brandLavender pl-4 text-left italic text-slate-600 text-sm leading-relaxed mb-6">
+                    "To the glowing <span class="placeholder-name">Birthday Girl</span>,<br><br>
+                    You navigated the turns and pathways with wonderful poise. Every step through life's little maze is simpler and filled with beautiful sparks when we remember the dreams that light up our soul!"
+                </div>
+
+                <button id="btn-to-level4" class="w-full py-4 rounded-xl bg-gradient-to-r from-brandLavender to-brandPink text-white font-bold text-xs tracking-widest uppercase shadow-md active:scale-95 transition-transform">
+                    Enter Level 4: Secret Puzzle
+                </button>
+            </div>
+        </div>
+
+        <!-- LEVEL 4: SECRET PUZZLE ROOM -->
+        <div id="screen-level4" class="screen flex-1 flex flex-col justify-between p-6 pt-24 text-center">
+            <div class="w-full flex flex-col gap-1 items-center z-20">
+                <div class="text-[20px] font-serif font-bold text-slate-800">Level 4: Secret Puzzle</div>
+                <div class="text-xs text-slate-500 font-medium mb-3">Align the floating starry constellations. Tap stars to rotate and complete the pattern!</div>
+            </div>
+
+            <!-- Puzzle interaction zone -->
+            <div class="flex-1 w-full flex flex-col justify-center items-center my-4 relative">
+                <div class="w-full p-6 premium-glass border border-brandRoseGold/30 rounded-2xl shadow-md min-h-[320px] flex flex-col justify-between items-center relative overflow-hidden bg-slate-900/40">
+                    <div class="absolute inset-0 pointer-events-none opacity-20">
+                        <!-- Blueprint/constellation lines -->
+                        <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <line x1="20" y1="20" x2="80" y2="80" stroke="#FFF" stroke-dasharray="3"/>
+                            <line x1="80" y1="20" x2="20" y2="80" stroke="#FFF" stroke-dasharray="3"/>
+                            <circle cx="50" cy="50" r="30" stroke="#FFF" fill="none" stroke-dasharray="4"/>
+                        </svg>
+                    </div>
+
+                    <!-- Interactive Constellation Star Nodes -->
+                    <div class="grid grid-cols-3 gap-6 my-auto z-10 w-full max-w-[280px]">
+                        <div id="puz-1" class="puzzle-node w-16 h-16 rounded-full bg-white/15 border border-brandRoseGold/40 flex flex-col items-center justify-center shadow-md select-none">
+                            <span class="text-xl">⭐</span>
+                            <span class="text-[9px] text-brandGold font-bold mt-1">0°</span>
+                        </div>
+                        <div id="puz-2" class="puzzle-node w-16 h-16 rounded-full bg-white/15 border border-brandRoseGold/40 flex flex-col items-center justify-center shadow-md select-none">
+                            <span class="text-xl">⭐</span>
+                            <span class="text-[9px] text-brandGold font-bold mt-1">90°</span>
+                        </div>
+                        <div id="puz-3" class="puzzle-node w-16 h-16 rounded-full bg-white/15 border border-brandRoseGold/40 flex flex-col items-center justify-center shadow-md select-none">
+                            <span class="text-xl">⭐</span>
+                            <span class="text-[9px] text-brandGold font-bold mt-1">180°</span>
+                        </div>
+                    </div>
+
+                    <div class="text-xs text-brandPeach font-bold mt-4 tracking-wide z-10" id="puzzle-progress-text">
+                        Tap nodes to align them all to 0° !
+                    </div>
+                </div>
+            </div>
+            <p class="text-[11px] text-slate-400 font-semibold mb-2">🧩 Align all constellation stars to reveal the magical secret!</p>
+        </div>
+
+        <!-- LEVEL 4 REWARD -->
+        <div id="screen-level4-reward" class="screen flex-1 flex flex-col items-center justify-center p-8 text-center">
+            <div class="w-full max-h-[90%] overflow-y-auto premium-glass p-8 border border-brandRoseGold/30 rounded-3xl shadow-xl flex flex-col items-center">
+                <span class="text-3xl mb-4">🌟</span>
+                <h2 class="font-serif text-2xl font-bold text-rose-gold-gradient mb-4">Celestial Puzzle Solved</h2>
+                
+                <div class="w-16 h-16 rounded-full bg-brandPeach/20 flex items-center justify-center mb-6 sparkle-slow">
+                    <span class="text-2xl">🔮</span>
+                </div>
+
+                <div class="sweet-letter border-l-4 border-brandPink pl-4 text-left italic text-slate-600 text-sm leading-relaxed mb-6">
+                    "Like stars aligning in the night sky to map out a path, your wonderful dreams are arranging themselves beautifully. Ready to head to the majestic celebration castle next?"
+                </div>
+
+                <button id="btn-to-level5" class="w-full py-4 rounded-xl bg-gradient-to-r from-brandPink to-brandPeach text-white font-bold text-xs tracking-widest uppercase shadow-md active:scale-95 transition-transform">
+                    Advance to Celebration Castle
+                </button>
+            </div>
+        </div>
+
+        <!-- LEVEL 5: THE CELEBRATION CASTLE -->
+        <div id="screen-level5" class="screen flex-1 flex flex-col justify-between p-6 pt-24 text-center">
+            <div class="w-full flex flex-col gap-1 items-center z-20">
+                <div class="text-[20px] font-serif font-bold text-slate-800">Level 5: Celebration Castle</div>
+                <div class="text-xs text-slate-500 font-medium">Tap the grand golden gate to build energy & break the lock!</div>
+            </div>
+
+            <!-- Interacting Golden Gates -->
+            <div class="flex-1 w-full flex flex-col justify-center items-center my-6 relative">
+                <div class="absolute w-48 h-48 rounded-full bg-gradient-to-tr from-brandPink to-brandPeach opacity-25 filter blur-3xl animate-pulse"></div>
+                
+                <div id="castle-gate-btn" class="relative z-10 cursor-pointer hover:scale-105 active:scale-95 transition-all">
+                    <!-- Beautiful Castle Gates vector wrapper -->
+                    <svg width="200" height="200" viewBox="0 0 100 100">
+                        <defs>
+                            <radialGradient id="gate-glow" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#FFD700" stop-opacity="0.6"/>
+                                <stop offset="100%" stop-color="#FFD700" stop-opacity="0"/>
+                            </radialGradient>
+                        </defs>
+                        <circle cx="50" cy="50" r="45" fill="url(#gate-glow)" id="gate-radial" class="animate-pulse" />
+                        
+                        <!-- Arch Frame -->
+                        <path d="M20 90 L20 40 A30 30 0 0 1 80 40 L80 90 Z" fill="none" stroke="#E6B8A2" stroke-width="4"/>
+                        <!-- Left Gate Leaf -->
+                        <path id="gate-left" d="M22 90 L22 40 A28 28 0 0 1 50 40 L50 90 Z" fill="#FFF2F4" stroke="#FFD700" stroke-width="1.5"/>
+                        <!-- Right Gate Leaf -->
+                        <path id="gate-right" d="M78 90 L78 40 A28 28 0 0 0 50 40 L50 90 Z" fill="#FFF2F4" stroke="#FFD700" stroke-width="1.5"/>
+                        
+                        <!-- Golden locks -->
+                        <circle cx="50" cy="65" r="7" fill="#FFD700" id="gate-lock"/>
+                        <path d="M47 65 L43 65 L43 68 L47 68 Z" fill="#E6B8A2"/>
+                        <path d="M53 65 L57 65 L57 68 L53 68 Z" fill="#E6B8A2"/>
+                    </svg>
+                    
+                    <div class="text-[10px] font-bold tracking-widest text-[#B37D6B] uppercase mt-2">
+                        👆 Tap Gate repeatedly to unlock!
+                    </div>
+                </div>
+
+                <!-- Custom Progress Energy Bar -->
+                <div class="w-full max-w-[220px] h-2 bg-slate-200/50 rounded-full overflow-hidden mt-6 p-[1px] border border-white/30">
+                    <div id="gate-energy-fill" class="h-full rounded-full bg-gradient-to-r from-brandGold to-brandPeach" style="width: 0%"></div>
+                </div>
+            </div>
+            <p class="text-[11px] text-slate-400 font-semibold mb-2">🚪 Break the cosmic seal and unlock the grand celebration!</p>
+        </div>
+
+        <!-- SCREEN 7: CELEBRATION SHOW -->
+        <div id="screen-celebration" class="screen flex-1 flex flex-col justify-between p-6 pt-24 text-center">
+            <div class="w-full flex flex-col items-center">
+                <h1 class="font-serif text-[38px] text-rose-gold-gradient font-black leading-tight tracking-tight float-gentle">
+                    Happy Birthday!
+                </h1>
+                <h2 id="final-display-name" class="font-serif text-[26px] text-rose-gold-gradient font-semibold tracking-wide -mt-2">
+                    Princess ❤️
+                </h2>
+            </div>
+
+            <div class="relative w-full flex-1 flex flex-col items-center justify-center my-2">
+                <div class="absolute w-56 h-56 rounded-full bg-gradient-to-tr from-brandPink to-brandPeach opacity-25 filter blur-3xl animate-pulse"></div>
+                
+                <div id="candles-blow-wrapper" class="relative z-10 cursor-pointer hover:scale-105 active:scale-95 transition-all">
+                    <svg width="180" height="180" viewBox="0 0 100 100">
+                        <path d="M25 88 L75 88 L65 80 L35 80 Z" fill="#E2E8F0"/>
+                        <ellipse cx="50" cy="80" rx="30" ry="6" fill="#F1F5F9"/>
+                        <rect x="22" y="48" width="56" height="32" fill="#FFEAEF" rx="5"/>
+                        <ellipse cx="50" cy="48" rx="28" ry="8" fill="#FFC0CB"/>
+                        <ellipse cx="50" cy="62" rx="28" ry="2" fill="#E6B8A2" opacity="0.4"/>
+                        <circle cx="28" cy="48" r="3" fill="#FFF" />
+                        <circle cx="36" cy="49" r="3" fill="#FFF" />
+                        <circle cx="44" cy="50" r="3" fill="#FFF" />
+                        <circle cx="50" cy="50" r="3" fill="#FFF" />
+                        <circle cx="56" cy="50" r="3" fill="#FFF" />
+                        <circle cx="64" cy="49" r="3" fill="#FFF" />
+                        <circle cx="72" cy="48" r="3" fill="#FFF" />
+                        <rect x="30" y="28" width="40" height="20" fill="#FFF" rx="4"/>
+                        <ellipse cx="50" cy="28" rx="20" ry="5" fill="#FFD6A5"/>
+                        <g id="cake-candles-group">
+                            <rect x="40" y="14" width="3" height="14" fill="#C8A2FF" rx="1"/>
+                            <path id="flame-1" class="candle-flame" d="M41.5 5 C43 9, 40 10, 41.5 5 Z" fill="#FFD700" filter="drop-shadow(0 0 4px rgba(255,215,0,0.8))"/>
+                            <rect x="48.5" y="10" width="3" height="18" fill="#FFB6C1" rx="1"/>
+                            <path id="flame-2" class="candle-flame" d="M50 1 C51.5 5, 48.5 6, 50 1 Z" fill="#FFD700" filter="drop-shadow(0 0 4px rgba(255,215,0,0.8))"/>
+                            <rect x="57" y="14" width="3" height="14" fill="#93C5FD" rx="1"/>
+                            <path id="flame-3" class="candle-flame" d="M58.5 5 C60 9, 57 10, 58.5 5 Z" fill="#FFD700" filter="drop-shadow(0 0 4px rgba(255,215,0,0.8))"/>
+                        </g>
+                    </svg>
+                    <div class="text-[10px] font-bold tracking-widest text-[#B37D6B] uppercase mt-2">
+                        👆 Tap the cake to blow out candles!
+                    </div>
+                </div>
+            </div>
+
+            <div class="premium-glass p-5 border border-brandRoseGold/30 rounded-2xl mb-4 shadow-sm">
+                <p id="celebration-card-text" class="text-xs text-slate-600 font-medium leading-relaxed max-w-[95%] mx-auto">
+                    "Today is all about celebrating the amazing person you are. May this year bring endless happiness, unforgettable memories, and everything you dream of. Keep smiling, keep shining, and never stop being wonderful."
+                </p>
+            </div>
+
+            <button id="btn-secret-reveal" class="w-full py-4 rounded-xl bg-gradient-to-r from-[#DB2777] to-[#7C3AED] text-white font-bold text-xs tracking-widest uppercase shadow-md active:scale-95 transition-transform">
+                One Last Surprise ❤️
+            </button>
+        </div>
+
+        <!-- SCREEN 7A: SPECIAL PROPOSAL QUESTIONNAIRE -->
+        <div id="screen-proposal-quiz" class="screen flex-1 flex flex-col justify-between p-6 pt-24 text-center">
+            <div class="w-full flex flex-col gap-1 items-center z-20">
+                <div class="text-[20px] font-serif font-bold text-slate-800">Heartfelt Questions ✨</div>
+                <div class="text-xs text-slate-500 font-medium">Just a few sweet questions for you...</div>
+                
+                <!-- Step Indicator Dots -->
+                <div class="flex gap-2 mt-3">
+                    <span id="step-dot-1" class="w-2 h-2 rounded-full bg-brandPink transition-all duration-300"></span>
+                    <span id="step-dot-2" class="w-2 h-2 rounded-full bg-slate-300 transition-all duration-300"></span>
+                    <span id="step-dot-3" class="w-2 h-2 rounded-full bg-slate-300 transition-all duration-300"></span>
+                    <span id="step-dot-4" class="w-2 h-2 rounded-full bg-slate-300 transition-all duration-300 hidden"></span>
+                </div>
+            </div>
+
+            <!-- Multi-step Question Container -->
+            <div class="flex-1 w-full flex flex-col justify-center items-center my-4">
+                <div class="w-full p-6 premium-glass border border-brandRoseGold/30 rounded-2xl shadow-lg min-h-[300px] flex flex-col justify-between items-center relative overflow-hidden bg-white/60">
+                    
+                    <!-- Question 1: Fav Food -->
+                    <div id="proposal-step-1" class="proposal-step w-full flex flex-col justify-center items-center gap-4 transition-all duration-500">
+                        <span class="text-3xl">🍕🍣🎂</span>
+                        <h3 class="text-sm font-bold text-slate-700">What is your absolute favorite food?</h3>
+                        <input type="text" id="prop-food" class="w-full px-4 py-3 rounded-xl bg-white/80 border border-brandRoseGold/40 text-center text-sm font-semibold text-slate-800 focus:outline-none focus:border-brandPink focus:ring-1 focus:ring-brandPink" placeholder="e.g. Pizza, Chocolate, Sushi..." maxlength="25">
+                        <button id="btn-prop-next-1" class="mt-2 px-6 py-2 rounded-lg bg-gradient-to-r from-brandPink to-brandPeach text-white text-xs font-bold uppercase tracking-wider shadow-sm active:scale-95 transition-transform">Next ➔</button>
+                    </div>
+
+                    <!-- Question 2: Boyfriend status -->
+                    <div id="proposal-step-2" class="proposal-step w-full flex flex-col justify-center items-center gap-3 transition-all duration-500 hidden">
+                        <span class="text-3xl">🌸</span>
+                        <h3 class="text-sm font-bold text-slate-700">Do you have a boyfriend?</h3>
+                        <div class="flex flex-col gap-2 w-full">
+                            <button class="boyfriend-opt w-full py-3 rounded-xl border border-brandRoseGold/30 bg-white/40 font-semibold text-xs text-slate-700 hover:bg-brandPink/10 hover:border-brandPink transition-all" data-val="No, waiting for someone special... ✨">No, waiting for someone special... ✨</button>
+                            <button class="boyfriend-opt w-full py-3 rounded-xl border border-brandRoseGold/30 bg-white/40 font-semibold text-xs text-slate-700 hover:bg-brandPink/10 hover:border-brandPink transition-all" data-val="Yes, I do 💑">Yes, I do 💑</button>
+                            <button class="boyfriend-opt w-full py-3 rounded-xl border border-brandRoseGold/30 bg-white/40 font-semibold text-xs text-slate-700 hover:bg-brandPink/10 hover:border-brandPink transition-all" data-val="It's a secret! 🤫">It's a secret! 🤫</button>
+                        </div>
+                    </div>
+
+                    <!-- Question 3: Do you like me -->
+                    <div id="proposal-step-3" class="proposal-step w-full flex flex-col justify-center items-center gap-3 transition-all duration-500 hidden">
+                        <span class="text-3xl">👉👈</span>
+                        <h3 class="text-sm font-bold text-slate-700">Do you like me?</h3>
+                        <div class="flex flex-col gap-2 w-full">
+                            <button class="likes-opt w-full py-3 rounded-xl border border-brandRoseGold/30 bg-white/40 font-semibold text-xs text-slate-700 hover:bg-brandPink/10 hover:border-brandPink transition-all" data-val="Yes, I do! ❤️">Yes, I do! ❤️</button>
+                            <button class="likes-opt w-full py-3 rounded-xl border border-brandRoseGold/30 bg-white/40 font-semibold text-xs text-slate-700 hover:bg-brandPink/10 hover:border-brandPink transition-all" data-val="Just as a good friend! ✨">Just as a good friend! ✨</button>
+                        </div>
+                    </div>
+
+                    <!-- Question 4: Propose conditional -->
+                    <div id="proposal-step-4" class="proposal-step w-full flex flex-col justify-center items-center gap-3 transition-all duration-500 hidden">
+                        <span class="text-3xl">💍💍💍</span>
+                        <h3 class="text-sm font-bold text-slate-700">If I propose to you, will you accept?</h3>
+                        <div class="flex flex-col gap-2 w-full">
+                            <button class="propose-opt w-full py-3 rounded-xl border border-brandRoseGold/30 bg-white/40 font-semibold text-xs text-slate-700 hover:bg-brandPink/10 hover:border-brandPink transition-all" data-val="Yes, a thousand times yes! 💖">Yes, a thousand times yes! 💖</button>
+                            <button class="propose-opt w-full py-3 rounded-xl border border-brandRoseGold/30 bg-white/40 font-semibold text-xs text-slate-700 hover:bg-brandPink/10 hover:border-brandPink transition-all" data-val="Maybe, surprise me! 🥰">Maybe, surprise me! 🥰</button>
+                            <button class="propose-opt w-full py-3 rounded-xl border border-brandRoseGold/30 bg-white/40 font-semibold text-xs text-slate-700 hover:bg-brandPink/10 hover:border-brandPink transition-all" data-val="I need some time to think... 💭">I need some time to think... 💭</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <p class="text-[11px] text-slate-400 font-semibold mb-2">🎈 Every choice is saved securely inside the magic star record!</p>
+        </div>
+
+        <!-- SCREEN 7B: PROPOSAL RESULTS REVEAL -->
+        <div id="screen-proposal-result" class="screen flex-1 flex flex-col justify-between p-6 pt-24 text-center">
+            <div class="w-full flex flex-col gap-1 items-center z-20">
+                <div class="text-[20px] font-serif font-bold text-rose-gold-gradient">Record Saved! 📟💖</div>
+                <div class="text-xs text-slate-500 font-medium">Here is your magical response summary:</div>
+            </div>
+
+            <!-- Dynamic Results Receipt Frame -->
+            <div class="flex-1 w-full flex flex-col justify-center items-center my-4">
+                <div class="w-full p-6 premium-glass border-2 border-dashed border-brandRoseGold/60 rounded-2xl shadow-inner bg-white/70 flex flex-col justify-between gap-4 text-left max-h-[340px] overflow-y-auto">
+                    
+                    <div class="space-y-3">
+                        <div class="border-b border-brandRoseGold/20 pb-2">
+                            <span class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Favorite Food</span>
+                            <p id="res-food" class="text-xs font-bold text-slate-700 mt-0.5">Not answered</p>
+                        </div>
+
+                        <div class="border-b border-brandRoseGold/20 pb-2">
+                            <span class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Has Boyfriend?</span>
+                            <p id="res-boyfriend" class="text-xs font-bold text-slate-700 mt-0.5">Not answered</p>
+                        </div>
+
+                        <div class="border-b border-brandRoseGold/20 pb-2">
+                            <span class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Do You Like Me?</span>
+                            <p id="res-likes" class="text-xs font-bold text-slate-700 mt-0.5">Not answered</p>
+                        </div>
+
+                        <div id="res-propose-row" class="pb-1 hidden">
+                            <span class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Proposal Acceptance</span>
+                            <p id="res-propose" class="text-xs font-bold text-brandPink mt-0.5">Not answered</p>
+                        </div>
+                    </div>
+
+                    <!-- Highlighted alert message container -->
+                    <div class="bg-red-50 border border-brandPink/30 rounded-xl p-3 text-center animate-pulse mt-2">
+                        <span class="text-lg">📸</span>
+                        <p class="text-[10px] text-red-500 font-bold uppercase tracking-wider mt-1">IMPORTANT ACTION</p>
+                        <p class="text-[11px] text-slate-600 font-semibold mt-1 leading-normal">
+                            Please take a <strong class="text-brandPink">screenshot</strong> of this screen right now, and share it with <strong class="text-purple-800">PRASAD KUMAR PALEI</strong>!
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Proceed to cinematic surprise -->
+            <button id="btn-final-cinematic" class="w-full py-4 rounded-xl bg-gradient-to-r from-brandPink to-brandPeach text-white font-bold text-xs tracking-widest uppercase shadow-md active:scale-95 transition-transform">
+                Open Final surprise ✨
+            </button>
+        </div>
+
+        <!-- SCREEN 8: CINEMATIC SECRET SURPRISE -->
+        <div id="screen-secret" class="screen secret-screen-bg flex-1 flex flex-col justify-between p-8 text-center relative overflow-hidden">
+            <div class="starry-universe absolute inset-0 pointer-events-none opacity-40"></div>
+            
+            <div class="relative z-10 flex-1 flex flex-col justify-center items-center my-auto">
+                <p id="cinematic-heading" class="cinematic-text font-serif text-[32px] md:text-[38px] leading-tight text-brandGold tracking-tight opacity-0 mb-4 transition-all duration-1000 transform translate-y-6">
+                    "Out of millions of days, this one became special..."
+                </p>
+                <p id="cinematic-subheading" class="cinematic-sub font-serif text-[22px] md:text-[24px] text-purple-200 leading-normal opacity-0 transition-all duration-1000 transform translate-y-6">
+                    "...because it brought you into the world.<br><br>
+                    <span class="placeholder-name font-serif text-[32px] md:text-[36px] text-brandPink font-bold drop-shadow-md">Princess</span> 🎂✨"
+                </p>
+
+                <div id="secret-heart-wrapper" class="w-24 h-24 mt-8 opacity-0 transition-all duration-1000 transform translate-y-6 flex items-center justify-center">
+                    <svg class="drop-shadow-lg float-gentle" width="80" height="80" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#FFB6C1" filter="drop-shadow(0 0 8px rgba(255,182,193,0.8))" />
+                    </svg>
+                </div>
+            </div>
+
+            <button id="btn-replay" class="relative z-20 w-full py-4 rounded-xl bg-white/10 border border-white/20 text-white font-bold text-xs tracking-widest uppercase shadow-md active:bg-white/20 transition-all mt-auto mb-2">
+                Begin Adventure Again ✨
+            </button>
+        </div>
+
+    </div>
+
+    <!-- Sound & Audio Synth System -->
+    <script>
+        class MusicEngine {
+            constructor() {
+                this.ctx = null;
+                this.isPlaying = false;
+                this.notesQueue = null;
+                this.noteCursor = 0;
+                
+                this.happyBirthdayChimes = [
+                    ['G4', 300], ['G4', 150], ['A4', 450], ['G4', 450], ['C5', 450], ['B4', 900],
+                    ['G4', 300], ['G4', 150], ['A4', 450], ['G4', 450], ['D5', 450], ['C5', 900],
+                    ['G4', 300], ['G4', 150], ['G5', 450], ['E5', 450], ['C5', 450], ['B4', 450], ['A4', 450],
+                    ['F5', 300], ['F5', 150], ['E5', 450], ['C5', 450], ['D5', 450], ['C5', 900]
+                ];
+                
+                this.frequencies = {
+                    'G4': 392.00, 'A4': 440.00, 'B4': 493.88, 'C5': 523.25, 
+                    'D5': 587.33, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99
+                };
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playTone(freq, type, duration, delay = 0, volume = 0.15) {
+                if (!this.ctx) return;
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = type; 
+                osc.frequency.setValueAtTime(freq, this.ctx.currentTime + delay);
+                
+                gain.gain.setValueAtTime(volume, this.ctx.currentTime + delay);
+                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + delay + (duration / 1000));
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.start(this.ctx.currentTime + delay);
+                osc.stop(this.ctx.currentTime + delay + (duration / 1000));
+            }
+
+            playHapticTick() {
+                this.init();
+                this.playTone(600, 'sine', 35, 0, 0.05);
+            }
+
+            playCollectChime() {
+                this.init();
+                this.playTone(523.25, 'sine', 180, 0, 0.12);
+                this.playTone(659.25, 'sine', 180, 0.06, 0.12);
+                this.playTone(783.99, 'sine', 280, 0.12, 0.12);
+            }
+
+            playHurtBuzz() {
+                this.init();
+                this.playTone(180, 'triangle', 250, 0, 0.15);
+                this.playTone(150, 'triangle', 300, 0.08, 0.15);
+            }
+
+            playVictorySweep() {
+                this.init();
+                const notes = [392, 523, 659, 783, 1046]; 
+                notes.forEach((freq, idx) => {
+                    this.playTone(freq, 'sine', 600, idx * 0.08, 0.1);
+                });
+            }
+
+            startMelodyLoop() {
+                this.init();
+                this.isPlaying = true;
+                this.noteCursor = 0;
+                this.advanceMelody();
+            }
+
+            advanceMelody() {
+                if (!this.isPlaying) return;
+                
+                const current = this.happyBirthdayChimes[this.noteCursor];
+                const noteName = current[0];
+                const duration = current[1];
+                const pitch = this.frequencies[noteName] || 440;
+
+                this.playTone(pitch, 'sine', duration + 100, 0, 0.08);
+
+                this.noteCursor = (this.noteCursor + 1) % this.happyBirthdayChimes.length;
+                this.notesQueue = setTimeout(() => {
+                    this.advanceMelody();
+                }, duration + 180);
+            }
+
+            stopMelodyLoop() {
+                this.isPlaying = false;
+                if (this.notesQueue) {
+                    clearTimeout(this.notesQueue);
+                }
+            }
+        }
+
+        const audio = new MusicEngine();
+    </script>
+
+    <!-- Application Routing & Game Level Management -->
+    <script>
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'the-birthday-adventure';
+        
+        const state = {
+            playerName: "Birthday Girl",
+            currentLevel: 1,
+            audioMuted: true,
+            scoreL1: 0,
+            scoreL2: 0,
+            livesL2: 100,
+            quizIndex: 0,
+            candlesBlown: false,
+            gateClicks: 0,
+            gateTargetClicks: 12,
+            proposalAnswers: {
+                food: "",
+                boyfriend: "",
+                likesMe: "",
+                acceptProposal: ""
+            }
+        };
+
+        // Cache recovery attempt
+        try {
+            const cached = localStorage.getItem(`${appId}_save`);
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (parsed.playerName) {
+                    state.playerName = parsed.playerName;
+                    document.getElementById('player-name').value = parsed.playerName;
+                }
+            }
+        } catch(err) {
+            console.log("No stored state available");
+        }
+
+        function showScreen(screenId) {
+            const currentActive = document.querySelector('.screen.active');
+            if (currentActive) {
+                currentActive.classList.remove('active');
+                setTimeout(() => {
+                    currentActive.classList.add('hidden');
+                }, 500);
+            }
+
+            const nextScreen = document.getElementById(screenId);
+            nextScreen.classList.remove('hidden');
+            setTimeout(() => {
+                nextScreen.classList.add('active');
+            }, 50);
+
+            // Dynamic global HUD badge management
+            const badge = document.getElementById('hud-level-badge');
+            if (screenId === 'screen-level1') {
+                badge.classList.remove('hidden');
+                badge.textContent = 'Level 1';
+                initLevel1();
+            } else if (screenId === 'screen-level2') {
+                badge.classList.remove('hidden');
+                badge.textContent = 'Level 2';
+                initLevel2();
+            } else if (screenId === 'screen-level3') {
+                badge.classList.remove('hidden');
+                badge.textContent = 'Level 3';
+                initLevel3();
+            } else if (screenId === 'screen-level4') {
+                badge.classList.remove('hidden');
+                badge.textContent = 'Level 4';
+                initLevel4();
+            } else if (screenId === 'screen-level5') {
+                badge.classList.remove('hidden');
+                badge.textContent = 'Level 5';
+                initLevel5();
+            } else if (screenId === 'screen-proposal-quiz') {
+                badge.classList.remove('hidden');
+                badge.textContent = 'Questions';
+                initProposalQuiz();
+            } else if (screenId === 'screen-proposal-result') {
+                badge.classList.remove('hidden');
+                badge.textContent = 'Receipt';
+                renderProposalResults();
+            } else if (screenId === 'screen-celebration') {
+                badge.classList.add('hidden');
+                initCelebration();
+            } else if (screenId === 'screen-secret') {
+                badge.classList.add('hidden');
+                initSecretCinematics();
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function updatePlayerPlaceholders() {
+            document.querySelectorAll('.placeholder-name').forEach(span => {
+                span.textContent = state.playerName;
+            });
+            const celebrationName = document.getElementById('final-display-name');
+            if (celebrationName) celebrationName.textContent = `${state.playerName} ❤️`;
+        }
+
+        // Audio controls UI actions
+        const audioBtn = document.getElementById('music-toggle');
+        audioBtn.addEventListener('click', () => {
+            audio.init();
+            if (audio.isPlaying) {
+                audio.stopMelodyLoop();
+                audioBtn.textContent = '🔇';
+                audioBtn.style.transform = 'scale(1)';
+                state.audioMuted = true;
+            } else {
+                audio.startMelodyLoop();
+                audioBtn.textContent = '🎵';
+                audioBtn.style.transform = 'scale(1.1)';
+                state.audioMuted = false;
+            }
+        });
+
+        // Trigger dynamic restart loop
+        const restartBtn = document.getElementById('restart-game');
+        restartBtn.addEventListener('click', () => {
+            audio.playHapticTick();
+            const confirmReset = confirm("Would you like to restart your magical birthday adventure?");
+            if (confirmReset) {
+                resetAllStages();
+            }
+        });
+
+        // Route landing triggers
+        const inputName = document.getElementById('player-name');
+        const startAction = document.getElementById('btn-start');
+
+        startAction.addEventListener('click', () => {
+            let nameVal = inputName.value.trim();
+            state.playerName = nameVal !== "" ? nameVal : "Princess";
+            
+            try {
+                localStorage.setItem(`${appId}_save`, JSON.stringify({playerName: state.playerName}));
+            } catch(e){}
+
+            updatePlayerPlaceholders();
+            
+            audio.init();
+            if (!state.audioMuted) {
+                audio.startMelodyLoop();
+            } else {
+                audio.playCollectChime();
+            }
+
+            showScreen('screen-level1');
+        });
+
+        // Typewriter subtitle generator
+        const sentences = ["Welcome, Beautiful Star!", "A Day Modeled for You", "Your Dreams Await", "Unwrap Your Wishes"];
+        const typewriterEl = document.getElementById('typewriter-text');
+        let index = 0, charIndex = 0, deletionMode = false;
+
+        function runTypewriter() {
+            const text = sentences[index];
+            if (deletionMode) {
+                typewriterEl.textContent = text.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                typewriterEl.textContent = text.substring(0, charIndex + 1);
+                charIndex++;
+            }
+
+            let speed = deletionMode ? 35 : 75;
+
+            if (!deletionMode && charIndex === text.length) {
+                speed = 2200; 
+                deletionMode = true;
+            } else if (deletionMode && charIndex === 0) {
+                deletionMode = false;
+                index = (index + 1) % sentences.length;
+                speed = 400;
+            }
+
+            setTimeout(runTypewriter, speed);
+        }
+        setTimeout(runTypewriter, 1000);
+
+
+        /**********************************************************
+         * CINEMATIC OPENING INTRO
+         **********************************************************/
+        const introTexts = [
+            "Today is not just another day...",
+            "Today is a very special day...",
+            "A magical adventure awaits...",
+            "Are you ready to claim your surprise?"
+        ];
+        let introIdx = 0;
+        const introTextEl = document.getElementById('intro-text');
+        const skipBtn = document.getElementById('btn-skip-intro');
+
+        function playIntroSequence() {
+            if (introIdx < introTexts.length) {
+                introTextEl.textContent = introTexts[introIdx];
+                introTextEl.style.opacity = '1';
+                
+                setTimeout(() => {
+                    if (introIdx === 0) {
+                        skipBtn.classList.remove('hidden');
+                    }
+                }, 1000);
+
+                setTimeout(() => {
+                    introTextEl.style.opacity = '0';
+                    setTimeout(() => {
+                        introIdx++;
+                        playIntroSequence();
+                    }, 1000);
+                }, 3000);
+            } else {
+                showScreen('screen-landing');
+            }
+        }
+        
+        // Initializer
+        window.onload = function() {
+            playIntroSequence();
+        }
+
+        skipBtn.addEventListener('click', () => {
+            introIdx = introTexts.length; // force stop intro loop
+            showScreen('screen-landing');
+        });
+
+
+        /**********************************************************
+         * AMBIENT DRIFTING BACKGROUND PARTICLES SYSTEM
+         **********************************************************/
+        const bgCanvas = document.getElementById('particle-canvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let bgParticlesList = [];
+
+        function resizeBgCanvas() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeBgCanvas);
+        resizeBgCanvas();
+
+        class AmbientParticle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * bgCanvas.width;
+                this.y = Math.random() * bgCanvas.height + bgCanvas.height;
+                this.size = Math.random() * 6 + 2;
+                this.vy = -(Math.random() * 1.2 + 0.3);
+                this.vx = Math.random() * 0.8 - 0.4;
+                const colors = ['rgba(255, 182, 193, 0.3)', 'rgba(200, 162, 255, 0.3)', 'rgba(255, 214, 165, 0.3)', 'rgba(255, 223, 186, 0.3)'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
+                this.shapeType = Math.random() > 0.5 ? 'circle' : 'sparkle';
+            }
+            update() {
+                this.y += this.vy;
+                this.x += this.vx;
+                if (this.y < -30) {
+                    this.reset();
+                }
+            }
+            draw() {
+                bgCtx.fillStyle = this.color;
+                if (this.shapeType === 'circle') {
+                    bgCtx.beginPath();
+                    bgCtx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    bgCtx.fill();
+                } else {
+                    bgCtx.beginPath();
+                    const d = this.size * 2.5;
+                    bgCtx.moveTo(this.x, this.y - d);
+                    bgCtx.quadraticCurveTo(this.x, this.y, this.x + d, this.y);
+                    bgCtx.quadraticCurveTo(this.x, this.y, this.x, this.y + d);
+                    bgCtx.quadraticCurveTo(this.x, this.y, this.x - d, this.y);
+                    bgCtx.quadraticCurveTo(this.x, this.y, this.x, this.y - d);
+                    bgCtx.fill();
+                }
+            }
+        }
+
+        for (let i = 0; i < 40; i++) {
+            bgParticlesList.push(new AmbientParticle());
+        }
+
+        function drawAmbientLoop() {
+            bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+            bgParticlesList.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(drawAmbientLoop);
+        }
+        drawAmbientLoop();
+
+
+        /**********************************************************
+         * LEVEL 1 GAMEPLAY ENGINE (LOST CAKE HUNT)
+         **********************************************************/
+        let l1Canvas, l1Ctx;
+        let l1Active = false;
+        let l1Player, l1Cakes, l1Confettis;
+        let l1MoveLeft = false, l1MoveRight = false, l1MoveUp = false, l1MoveDown = false;
+
+        function initLevel1() {
+            l1Canvas = document.getElementById('level1-canvas');
+            l1Ctx = l1Canvas.getContext('2d');
+
+            const wrap = l1Canvas.parentElement;
+            l1Canvas.width = wrap.clientWidth;
+            l1Canvas.height = Math.min(wrap.clientHeight, 400);
+
+            state.scoreL1 = 0;
+            document.getElementById('l1-score').textContent = `Collected: 0/5`;
+            document.getElementById('l1-progress').style.width = `0%`;
+
+            l1Player = {
+                x: l1Canvas.width / 2,
+                y: l1Canvas.height / 2,
+                radius: 12,
+                speed: 6.0, // Increased speed for snappy movement
+                targetX: undefined, // Click/Tap glide coordinate
+                targetY: undefined
+            };
+
+            l1Cakes = [];
+            // Hand-spawn 5 pieces of cake at distinct coordinates
+            for (let i = 0; i < 5; i++) {
+                l1Cakes.push({
+                    x: Math.random() * (l1Canvas.width - 60) + 30,
+                    y: Math.random() * (l1Canvas.height - 60) + 30,
+                    radius: 10,
+                    collected: false
+                });
+            }
+
+            l1Confettis = [];
+            
+            // Listen for direct clicks/taps on canvas to support easy glide-to-move
+            if (!l1Canvas.dataset.listenerAttached) {
+                l1Canvas.addEventListener('click', (e) => {
+                    if (!l1Active) return;
+                    const rect = l1Canvas.getBoundingClientRect();
+                    l1Player.targetX = e.clientX - rect.left;
+                    l1Player.targetY = e.clientY - rect.top;
+                });
+                l1Canvas.dataset.listenerAttached = "true";
+            }
+
+            l1Active = true;
+            runL1Loop();
+        }
+
+        // Key listeners mapping
+        let activeKeys = {};
+        window.addEventListener('keydown', (e) => activeKeys[e.key] = true);
+        window.addEventListener('keyup', (e) => activeKeys[e.key] = false);
+
+        // Mobile touch triggers mapping
+        const l1LeftBtn = document.getElementById('l1-btn-left');
+        const l1RightBtn = document.getElementById('l1-btn-right');
+        const l1UpBtn = document.getElementById('l1-btn-up');
+        const l1DownBtn = document.getElementById('l1-btn-down');
+
+        l1LeftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); l1MoveLeft = true; });
+        l1LeftBtn.addEventListener('touchend', () => l1MoveLeft = false);
+        l1RightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); l1MoveRight = true; });
+        l1RightBtn.addEventListener('touchend', () => l1MoveRight = false);
+        l1UpBtn.addEventListener('touchstart', (e) => { e.preventDefault(); l1MoveUp = true; });
+        l1UpBtn.addEventListener('touchend', () => l1MoveUp = false);
+        l1DownBtn.addEventListener('touchstart', (e) => { e.preventDefault(); l1MoveDown = true; });
+        l1DownBtn.addEventListener('touchend', () => l1MoveDown = false);
+
+        // Fallbacks for desktop testing setups
+        l1LeftBtn.addEventListener('mousedown', () => l1MoveLeft = true);
+        l1LeftBtn.addEventListener('mouseup', () => l1MoveLeft = false);
+        l1RightBtn.addEventListener('mousedown', () => l1MoveRight = true);
+        l1RightBtn.addEventListener('mouseup', () => l1MoveRight = false);
+        l1UpBtn.addEventListener('mousedown', () => l1MoveUp = true);
+        l1UpBtn.addEventListener('mouseup', () => l1MoveUp = false);
+        l1DownBtn.addEventListener('mousedown', () => l1MoveDown = true);
+        l1DownBtn.addEventListener('mouseup', () => l1MoveDown = false);
+
+        function triggerConfettiBurst(x, y) {
+            for (let i = 0; i < 15; i++) {
+                l1Confettis.push({
+                    x: x,
+                    y: y,
+                    vx: Math.random() * 4 - 2,
+                    vy: Math.random() * -5 - 1,
+                    size: Math.random() * 4 + 2,
+                    color: `hsl(${Math.random() * 360}, 90%, 70%)`,
+                    alpha: 1
+                });
+            }
+        }
+
+        function drawL1Player() {
+            // Player character: A cute glowing crown sphere
+            l1Ctx.fillStyle = '#C8A2FF';
+            l1Ctx.beginPath();
+            l1Ctx.arc(l1Player.x, l1Player.y, l1Player.radius, 0, Math.PI * 2);
+            l1Ctx.fill();
+
+            // Inner eye dot details
+            l1Ctx.fillStyle = '#FFF';
+            l1Ctx.beginPath();
+            l1Ctx.arc(l1Player.x - 4, l1Player.y - 2, 2.5, 0, Math.PI * 2);
+            l1Ctx.arc(l1Player.x + 4, l1Player.y - 2, 2.5, 0, Math.PI * 2);
+            l1Ctx.fill();
+
+            l1Ctx.fillStyle = '#000';
+            l1Ctx.beginPath();
+            l1Ctx.arc(l1Player.x - 4, l1Player.y - 2, 1, 0, Math.PI * 2);
+            l1Ctx.arc(l1Player.x + 4, l1Player.y - 2, 1, 0, Math.PI * 2);
+            l1Ctx.fill();
+            
+            // Little golden crown
+            l1Ctx.fillStyle = '#FFD700';
+            l1Ctx.beginPath();
+            l1Ctx.moveTo(l1Player.x - 8, l1Player.y - 10);
+            l1Ctx.lineTo(l1Player.x - 6, l1Player.y - 18);
+            l1Ctx.lineTo(l1Player.x - 2, l1Player.y - 14);
+            l1Ctx.lineTo(l1Player.x, l1Player.y - 21);
+            l1Ctx.lineTo(l1Player.x + 2, l1Player.y - 14);
+            l1Ctx.lineTo(l1Player.x + 6, l1Player.y - 18);
+            l1Ctx.lineTo(l1Player.x + 8, l1Player.y - 10);
+            l1Ctx.closePath();
+            l1Ctx.fill();
+        }
+
+        function drawL1CakeSlice(cake) {
+            l1Ctx.save();
+            l1Ctx.translate(cake.x, cake.y);
+
+            // Floating movement effect
+            const floatOffset = Math.sin(Date.now() / 180 + cake.x) * 3;
+            l1Ctx.translate(0, floatOffset);
+
+            // Layer cake path
+            l1Ctx.fillStyle = '#FFB6C1';
+            l1Ctx.beginPath();
+            l1Ctx.moveTo(-10, 8);
+            l1Ctx.lineTo(10, 8);
+            l1Ctx.lineTo(14, -4);
+            l1Ctx.lineTo(-14, -4);
+            l1Ctx.closePath();
+            l1Ctx.fill();
+
+            // Cherry
+            l1Ctx.fillStyle = '#FF4D6D';
+            l1Ctx.beginPath();
+            l1Ctx.arc(0, -12, 3, 0, Math.PI * 2);
+            l1Ctx.fill();
+
+            l1Ctx.restore();
+        }
+
+        function runL1Loop() {
+            if (!l1Active) return;
+
+            l1Ctx.clearRect(0, 0, l1Canvas.width, l1Canvas.height);
+
+            // Background grid drawing
+            l1Ctx.strokeStyle = 'rgba(230, 184, 162, 0.15)';
+            l1Ctx.lineWidth = 1;
+            for(let i=0; i<l1Canvas.width; i+=40) {
+                l1Ctx.beginPath();
+                l1Ctx.moveTo(i, 0);
+                l1Ctx.lineTo(i, l1Canvas.height);
+                l1Ctx.stroke();
+            }
+            for(let j=0; j<l1Canvas.height; j+=40) {
+                l1Ctx.beginPath();
+                l1Ctx.moveTo(0, j);
+                l1Ctx.lineTo(l1Canvas.width, j);
+                l1Ctx.stroke();
+            }
+
+            // Move Player
+            const isControlActive = activeKeys['ArrowLeft'] || activeKeys['a'] || l1MoveLeft ||
+                                    activeKeys['ArrowRight'] || activeKeys['d'] || l1MoveRight ||
+                                    activeKeys['ArrowUp'] || activeKeys['w'] || l1MoveUp ||
+                                    activeKeys['ArrowDown'] || activeKeys['s'] || l1MoveDown;
+
+            if (isControlActive) {
+                // If direct controls are pressed, cancel glide destination
+                l1Player.targetX = undefined;
+                l1Player.targetY = undefined;
+
+                if (activeKeys['ArrowLeft'] || activeKeys['a'] || l1MoveLeft) {
+                    l1Player.x = Math.max(l1Player.radius, l1Player.x - l1Player.speed);
+                }
+                if (activeKeys['ArrowRight'] || activeKeys['d'] || l1MoveRight) {
+                    l1Player.x = Math.min(l1Canvas.width - l1Player.radius, l1Player.x + l1Player.speed);
+                }
+                if (activeKeys['ArrowUp'] || activeKeys['w'] || l1MoveUp) {
+                    l1Player.y = Math.max(l1Player.radius, l1Player.y - l1Player.speed);
+                }
+                if (activeKeys['ArrowDown'] || activeKeys['s'] || l1MoveDown) {
+                    l1Player.y = Math.min(l1Canvas.height - l1Player.radius, l1Player.y + l1Player.speed);
+                }
+            } else if (l1Player.targetX !== undefined && l1Player.targetY !== undefined) {
+                // Gentle automatic glide movement
+                const dx = l1Player.targetX - l1Player.x;
+                const dy = l1Player.targetY - l1Player.y;
+                const dist = Math.hypot(dx, dy);
+                if (dist > 5) {
+                    l1Player.x += (dx / dist) * l1Player.speed;
+                    l1Player.y += (dy / dist) * l1Player.speed;
+                } else {
+                    l1Player.targetX = undefined;
+                    l1Player.targetY = undefined;
+                }
+            }
+
+            // Draw automatic guidance dotted beam pointing to nearest uncollected cake piece
+            let nearestCake = null;
+            let minDist = Infinity;
+            l1Cakes.forEach(cake => {
+                if (!cake.collected) {
+                    const d = Math.hypot(cake.x - l1Player.x, cake.y - l1Player.y);
+                    if (d < minDist) {
+                        minDist = d;
+                        nearestCake = cake;
+                    }
+                }
+            });
+
+            if (nearestCake) {
+                l1Ctx.strokeStyle = 'rgba(230, 184, 162, 0.45)';
+                l1Ctx.lineWidth = 1.5;
+                l1Ctx.setLineDash([4, 4]);
+                l1Ctx.beginPath();
+                l1Ctx.moveTo(l1Player.x, l1Player.y);
+                l1Ctx.lineTo(nearestCake.x, nearestCake.y);
+                l1Ctx.stroke();
+                l1Ctx.setLineDash([]); // Reset line dash
+            }
+
+            drawL1Player();
+
+            // Update Cakes
+            l1Cakes.forEach((cake) => {
+                if (!cake.collected) {
+                    drawL1CakeSlice(cake);
+
+                    // Check Collision (forgiving wide collision radius)
+                    const dist = Math.hypot(cake.x - l1Player.x, cake.y - l1Player.y);
+                    if (dist < l1Player.radius + cake.radius + 12) {
+                        cake.collected = true;
+                        audio.playCollectChime();
+                        triggerConfettiBurst(cake.x, cake.y);
+                        state.scoreL1++;
+
+                        document.getElementById('l1-score').textContent = `Collected: ${state.scoreL1}/5`;
+                        document.getElementById('l1-progress').style.width = `${(state.scoreL1 / 5) * 100}%`;
+
+                        if (state.scoreL1 >= 5) {
+                            l1Active = false;
+                            audio.playVictorySweep();
+                            setTimeout(() => showScreen('screen-level1-reward'), 800);
+                        }
+                    }
+                }
+            });
+
+            // Update particle effects
+            for (let i = l1Confettis.length - 1; i >= 0; i--) {
+                const conf = l1Confettis[i];
+                conf.x += conf.vx;
+                conf.y += conf.vy;
+                conf.vy += 0.2; // Gravity
+                conf.alpha -= 0.025;
+
+                l1Ctx.fillStyle = conf.color;
+                l1Ctx.globalAlpha = conf.alpha;
+                l1Ctx.beginPath();
+                l1Ctx.arc(conf.x, conf.y, conf.size, 0, Math.PI * 2);
+                l1Ctx.fill();
+                l1Ctx.globalAlpha = 1.0;
+
+                if (conf.alpha <= 0) {
+                    l1Confettis.splice(i, 1);
+                }
+            }
+
+            requestAnimationFrame(runL1Loop);
+        }
+
+        document.getElementById('btn-to-level2').addEventListener('click', () => {
+            showScreen('screen-level2');
+        });
+
+
+        /**********************************************************
+         * LEVEL 2 GAMEPLAY ENGINE (MEMORY STARS)
+         **********************************************************/
+        let l2Canvas, l2Ctx;
+        let l2Active = false;
+        let l2StarsList;
+
+        const dynamicCompliments = [
+            "⭐ You bring incredible sunshine & colors to everyone's lives!",
+            "⭐ Your smile glows with the warmth of a million wishing stars!",
+            "⭐ You are a brilliant soul filled with limitless potential!",
+            "⭐ Your heart is purely golden, lifting everyone's spirits!",
+            "⭐ Like starry constellations, all your beautiful dreams are aligning!"
+        ];
+
+        function initLevel2() {
+            l2Canvas = document.getElementById('level2-canvas');
+            l2Ctx = l2Canvas.getContext('2d');
+
+            const wrap = l2Canvas.parentElement;
+            l2Canvas.width = wrap.clientWidth;
+            l2Canvas.height = Math.min(wrap.clientHeight, 400);
+
+            state.scoreL2 = 0;
+            document.getElementById('l2-score').textContent = `Collected: 0/5`;
+            document.getElementById('l2-progress').style.width = `0%`;
+
+            l2StarsList = [];
+            for (let i = 0; i < 5; i++) {
+                l2StarsList.push({
+                    x: Math.random() * (l2Canvas.width - 65) + 30,
+                    y: Math.random() * (l2Canvas.height - 65) + 30,
+                    radius: 12,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    color: '#FFD700',
+                    collected: false,
+                    compliment: dynamicCompliments[i]
+                });
+            }
+
+            l2Active = true;
+            runL2Loop();
+        }
+
+        // Tap/Click interaction on Level 2 Canvas
+        document.getElementById('level2-canvas').addEventListener('click', (e) => {
+            if (!l2Active) return;
+
+            const rect = l2Canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            l2StarsList.forEach((star) => {
+                if (!star.collected) {
+                    const dist = Math.hypot(star.x - clickX, star.y - clickY);
+                    if (dist < star.radius + 15) {
+                        star.collected = true;
+                        audio.playCollectChime();
+                        state.scoreL2++;
+
+                        // Visual pop trigger
+                        triggerL2Confetti(star.x, star.y);
+
+                        document.getElementById('l2-score').textContent = `Collected: ${state.scoreL2}/5`;
+                        document.getElementById('l2-progress').style.width = `${(state.scoreL2 / 5) * 100}%`;
+
+                        if (state.scoreL2 >= 5) {
+                            l2Active = false;
+                            audio.playVictorySweep();
+                            setTimeout(() => {
+                                populateL2RewardMessages();
+                                showScreen('screen-level2-reward');
+                            }, 800);
+                        }
+                    }
+                }
+            });
+        });
+
+        function triggerL2Confetti(x, y) {
+            // Inject sparkling celebration stars to the global background
+            for (let i = 0; i < 15; i++) {
+                bgParticlesList.push({
+                    x: x,
+                    y: y,
+                    size: Math.random() * 8 + 4,
+                    vy: Math.random() * 4 - 2,
+                    vx: Math.random() * 4 - 2,
+                    color: '#FFD700',
+                    shapeType: 'sparkle',
+                    update() {
+                        this.y += this.vy;
+                        this.x += this.vx;
+                        this.vy += 0.05; // slight drop
+                        if (this.y > bgCanvas.height) {
+                            const idx = bgParticlesList.indexOf(this);
+                            if (idx > -1) bgParticlesList.splice(idx, 1);
+                        }
+                    },
+                    draw() {
+                        bgCtx.fillStyle = this.color;
+                        bgCtx.beginPath();
+                        bgCtx.arc(this.x, this.y, this.size/2, 0, Math.PI*2);
+                        bgCtx.fill();
+                    }
+                });
+            }
+        }
+
+        function drawStarShape(cx, cy, spikes, outerRadius, innerRadius, color) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            const step = Math.PI / spikes;
+
+            l2Ctx.beginPath();
+            l2Ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                l2Ctx.lineTo(x, y);
+                rot += step;
+
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                l2Ctx.lineTo(x, y);
+                rot += step;
+            }
+            l2Ctx.lineTo(cx, cy - outerRadius);
+            l2Ctx.closePath();
+            l2Ctx.fillStyle = color;
+            l2Ctx.fill();
+        }
+
+        function runL2Loop() {
+            if (!l2Active) return;
+
+            l2Ctx.clearRect(0, 0, l2Canvas.width, l2Canvas.height);
+
+            l2StarsList.forEach((star) => {
+                if (!star.collected) {
+                    // Update bounce movement inside box
+                    star.x += star.vx;
+                    star.y += star.vy;
+
+                    if (star.x < star.radius || star.x > l2Canvas.width - star.radius) star.vx *= -1;
+                    if (star.y < star.radius || star.y > l2Canvas.height - star.radius) star.vy *= -1;
+
+                    // Draw golden glowing star
+                    const pulse = 1 + Math.sin(Date.now() / 150 + star.x) * 0.15;
+                    l2Ctx.save();
+                    drawStarShape(star.x, star.y, 5, star.radius * pulse, (star.radius / 2) * pulse, star.color);
+                    l2Ctx.restore();
+                }
+            });
+
+            requestAnimationFrame(runL2Loop);
+        }
+
+        function populateL2RewardMessages() {
+            const container = document.getElementById('star-message-container');
+            container.innerHTML = '';
+            
+            dynamicCompliments.forEach((comp, idx) => {
+                const card = document.createElement('div');
+                card.className = "p-3 rounded-xl bg-white/50 border border-brandRoseGold/30 text-xs font-semibold text-slate-700 italic";
+                card.textContent = comp;
+                container.appendChild(card);
+            });
+        }
+
+        document.getElementById('btn-to-level3').addEventListener('click', () => {
+            showScreen('screen-level3');
+        });
+
+
+        /**********************************************************
+         * LEVEL 3 GAMEPLAY ENGINE (HEART MAZE)
+         **********************************************************/
+        let l3Canvas, l3Ctx;
+        let l3Active = false;
+        let l3Player;
+        let l3StartTime;
+        let l3ExitNode;
+
+        const mazeGrid = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+            [1, 0, 1, 0, 1, 0, 1, 1, 0, 1],
+            [1, 0, 1, 0, 0, 0, 0, 1, 0, 1],
+            [1, 0, 1, 1, 1, 1, 0, 1, 0, 1],
+            [1, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+            [1, 1, 1, 1, 0, 1, 1, 1, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 1, 0, 1],
+            [1, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
+
+        let l3MoveLeft = false, l3MoveRight = false, l3MoveUp = false, l3MoveDown = false;
+
+        function initLevel3() {
+            l3Canvas = document.getElementById('level3-canvas');
+            l3Ctx = l3Canvas.getContext('2d');
+
+            const wrap = l3Canvas.parentElement;
+            l3Canvas.width = wrap.clientWidth;
+            l3Canvas.height = Math.min(wrap.clientHeight, 400);
+
+            l3StartTime = Date.now();
+            
+            // Set Player start grid position
+            l3Player = {
+                gridX: 1,
+                gridY: 1,
+                radius: 10
+            };
+
+            l3ExitNode = {
+                gridX: 8,
+                gridY: 8
+            };
+
+            l3Active = true;
+            runL3Loop();
+        }
+
+        // Setup Keyboard Navigation trigger listeners
+        window.addEventListener('keydown', (e) => {
+            if (!l3Active) return;
+            
+            let nextX = l3Player.gridX;
+            let nextY = l3Player.gridY;
+
+            if (e.key === 'ArrowLeft' || e.key === 'a') nextX--;
+            if (e.key === 'ArrowRight' || e.key === 'd') nextX++;
+            if (e.key === 'ArrowUp' || e.key === 'w') nextY--;
+            if (e.key === 'ArrowDown' || e.key === 's') nextY++;
+
+            if (mazeGrid[nextY] && mazeGrid[nextY][nextX] === 0) {
+                l3Player.gridX = nextX;
+                l3Player.gridY = nextY;
+                audio.playHapticTick();
+                checkMazeWin();
+            }
+        });
+
+        // Setup Mobile Navigation triggers for Level 3 Maze
+        const setupMazeTouchBtn = (id, dx, dy) => {
+            const btn = document.getElementById(id);
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!l3Active) return;
+                let nextX = l3Player.gridX + dx;
+                let nextY = l3Player.gridY + dy;
+                if (mazeGrid[nextY] && mazeGrid[nextY][nextX] === 0) {
+                    l3Player.gridX = nextX;
+                    l3Player.gridY = nextY;
+                    audio.playHapticTick();
+                    checkMazeWin();
+                }
+            });
+        };
+
+        setupMazeTouchBtn('l3-btn-left', -1, 0);
+        setupMazeTouchBtn('l3-btn-right', 1, 0);
+        setupMazeTouchBtn('l3-btn-up', 0, -1);
+        setupMazeTouchBtn('l3-btn-down', 0, 1);
+
+        function checkMazeWin() {
+            if (l3Player.gridX === l3ExitNode.gridX && l3Player.gridY === l3ExitNode.gridY) {
+                l3Active = false;
+                audio.playVictorySweep();
+                setTimeout(() => showScreen('screen-level3-reward'), 800);
+            }
+        }
+
+        function drawL3PlayerHeart(x, y, size) {
+            l3Ctx.fillStyle = '#FF7597';
+            l3Ctx.beginPath();
+            l3Ctx.moveTo(x, y + size/4);
+            l3Ctx.quadraticCurveTo(x, y, x - size/2, y);
+            l3Ctx.quadraticCurveTo(x - size, y, x - size, y + size/2);
+            l3Ctx.quadraticCurveTo(x - size, y + size*0.75, x, y + size);
+            l3Ctx.quadraticCurveTo(x + size, y + size*0.75, x + size, y + size/2);
+            l3Ctx.quadraticCurveTo(x + size, y, x + size/2, y);
+            l3Ctx.quadraticCurveTo(x, y, x, y + size/4);
+            l3Ctx.fill();
+        }
+
+        function runL3Loop() {
+            if (!l3Active) return;
+
+            l3Ctx.clearRect(0, 0, l3Canvas.width, l3Canvas.height);
+
+            // Calculate grid scales based on dimensions
+            const rows = mazeGrid.length;
+            const cols = mazeGrid[0].length;
+            const cellWidth = l3Canvas.width / cols;
+            const cellHeight = l3Canvas.height / rows;
+
+            // Draw Maze Walls
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (mazeGrid[r][c] === 1) {
+                        l3Ctx.fillStyle = 'rgba(230, 184, 162, 0.4)';
+                        l3Ctx.beginPath();
+                        l3Ctx.roundRect(c * cellWidth + 2, r * cellHeight + 2, cellWidth - 4, cellHeight - 4, 6);
+                        l3Ctx.fill();
+                        
+                        l3Ctx.strokeStyle = 'rgba(230, 184, 162, 0.6)';
+                        l3Ctx.lineWidth = 1;
+                        l3Ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw Exit target point
+            l3Ctx.fillStyle = '#FFD700';
+            const exitX = l3ExitNode.gridX * cellWidth + cellWidth / 2;
+            const exitY = l3ExitNode.gridY * cellHeight + cellHeight / 2;
+            l3Ctx.beginPath();
+            l3Ctx.arc(exitX, exitY, 8, 0, Math.PI * 2);
+            l3Ctx.fill();
+            
+            // Glowing ring around exit
+            l3Ctx.strokeStyle = 'rgba(255, 215, 0, 0.5)';
+            l3Ctx.lineWidth = 3;
+            l3Ctx.beginPath();
+            l3Ctx.arc(exitX, exitY, 12 + Math.sin(Date.now() / 100) * 3, 0, Math.PI * 2);
+            l3Ctx.stroke();
+
+            // Draw Player
+            const playerX = l3Player.gridX * cellWidth + cellWidth / 2;
+            const playerY = l3Player.gridY * cellHeight + cellHeight / 2;
+            drawL3PlayerHeart(playerX, playerY - 4, 10);
+
+            // Update Time Indicators
+            const secs = Math.floor((Date.now() - l3StartTime) / 1000);
+            document.getElementById('l3-timer').textContent = `Maze Time: ${secs}s`;
+
+            requestAnimationFrame(runL3Loop);
+        }
+
+        document.getElementById('btn-to-level4').addEventListener('click', () => {
+            showScreen('screen-level4');
+        });
+
+
+        /**********************************************************
+         * LEVEL 4 GAMEPLAY ENGINE (CONSTELLATION PUZZLE)
+         **********************************************************/
+        let puzStates = [0, 90, 180]; // target is all 0
+
+        function initLevel4() {
+            // Setup random starting rotations but ensures they aren't already win states
+            puzStates = [
+                [90, 180, 270][Math.floor(Math.random() * 3)],
+                [90, 180, 270][Math.floor(Math.random() * 3)],
+                [90, 180, 270][Math.floor(Math.random() * 3)]
+            ];
+            updatePuzzleUI();
+        }
+
+        function updatePuzzleUI() {
+            for (let i = 1; i <= 3; i++) {
+                const node = document.getElementById(`puz-${i}`);
+                const rotation = puzStates[i - 1];
+                
+                // Rotates star element visually based on degree State
+                node.style.transform = `rotate(${rotation}deg)`;
+                node.querySelector('span:last-child').textContent = `${rotation}°`;
+                
+                if (rotation === 0) {
+                    node.classList.add('bg-brandPeach/30', 'border-brandGold');
+                } else {
+                    node.classList.remove('bg-brandPeach/30', 'border-brandGold');
+                }
+            }
+
+            // Check Puzzle solved conditions
+            if (puzStates[0] === 0 && puzStates[1] === 0 && puzStates[2] === 0) {
+                audio.playVictorySweep();
+                document.getElementById('puzzle-progress-text').innerHTML = "✨ Solved! Loading Secret Message...";
+                setTimeout(() => {
+                    showScreen('screen-level4-reward');
+                }, 1200);
+            }
+        }
+
+        // Add interactive event listeners to Level 4 puzzle Nodes
+        for (let i = 1; i <= 3; i++) {
+            document.getElementById(`puz-${i}`).addEventListener('click', () => {
+                audio.playHapticTick();
+                puzStates[i - 1] = (puzStates[i - 1] + 90) % 360;
+                updatePuzzleUI();
+            });
+        }
+
+        document.getElementById('btn-to-level5').addEventListener('click', () => {
+            showScreen('screen-level5');
+        });
+
+
+        /**********************************************************
+         * LEVEL 5 GAMEPLAY ENGINE (CELEBRATION CASTLE GATES)
+         **********************************************************/
+        function initLevel5() {
+            state.gateClicks = 0;
+            updateGateEnergyUI();
+        }
+
+        function updateGateEnergyUI() {
+            const progress = (state.gateClicks / state.gateTargetClicks) * 100;
+            document.getElementById('gate-energy-fill').style.width = `${progress}%`;
+        }
+
+        document.getElementById('castle-gate-btn').addEventListener('click', () => {
+            if (state.gateClicks < state.gateTargetClicks) {
+                state.gateClicks++;
+                audio.playCollectChime();
+                updateGateEnergyUI();
+
+                // Gate click animation details
+                const btn = document.getElementById('castle-gate-btn');
+                btn.style.transform = 'scale(0.95)';
+                setTimeout(() => btn.style.transform = 'scale(1)', 100);
+
+                // Open gates on target reach
+                if (state.gateClicks >= state.gateTargetClicks) {
+                    audio.playVictorySweep();
+                    
+                    // Rotate Gate Wings visually to show opening action
+                    document.getElementById('gate-left').style.transform = 'rotateY(-70deg) translate(-20px, 0)';
+                    document.getElementById('gate-right').style.transform = 'rotateY(70deg) translate(20px, 0)';
+                    document.getElementById('gate-lock').style.opacity = '0';
+
+                    setTimeout(() => {
+                        showScreen('screen-celebration');
+                    }, 1200);
+                }
+            }
+        });
+
+
+        /**********************************************************
+         * CELEBRATION COMPONENT
+         **********************************************************/
+        let celebrationInterval = null;
+
+        function initCelebration() {
+            state.candlesBlown = false;
+            document.getElementById('cake-candles-group').style.opacity = '1';
+            document.getElementById('celebration-card-text').textContent = 
+                `"Today is all about celebrating the amazing person you are. May this year bring endless happiness, unforgettable memories, and everything you dream of. Keep smiling, keep shining, and never stop being wonderful."`;
+            
+            triggerConfettiShow();
+        }
+
+        // Tap centerpiece cake to trigger candle puff effects
+        document.getElementById('candles-blow-wrapper').addEventListener('click', () => {
+            if (!state.candlesBlown) {
+                state.candlesBlown = true;
+                audio.playVictorySweep();
+
+                // Extinguish the vector flame paths
+                document.getElementById('flame-1').style.display = 'none';
+                document.getElementById('flame-2').style.display = 'none';
+                document.getElementById('flame-3').style.display = 'none';
+
+                document.getElementById('celebration-card-text').innerHTML = 
+                    `<strong class="text-brandPink text-sm">✨ Wish Sent to the Stars! ✨</strong><br>Your secret dreams have been gathered by sweet fairies! Keep shining, wonderful <span class="placeholder-name font-bold">${state.playerName}</span>!`;
+
+                // Explode spectacular canvas splashes
+                for (let i = 0; i < 40; i++) {
+                    bgParticlesList.push(new AmbientParticle());
+                }
+            }
+        });
+
+        // Generate falling particles continuously in background
+        function triggerConfettiShow() {
+            if (celebrationInterval) clearInterval(celebrationInterval);
+
+            celebrationInterval = setInterval(() => {
+                const burstX = Math.random() * bgCanvas.width;
+                const burstY = Math.random() * (bgCanvas.height * 0.4);
+                
+                for (let i = 0; i < 15; i++) {
+                    bgParticlesList.push({
+                        x: burstX,
+                        y: burstY,
+                        size: Math.random() * 8 + 4,
+                        vy: Math.random() * 3 + 1.5,
+                        vx: Math.random() * 4 - 2,
+                        color: `hsl(${Math.random() * 360}, 90%, 75%)`,
+                        shapeType: Math.random() > 0.45 ? 'circle' : 'sparkle',
+                        update() {
+                            this.y += this.vy;
+                            this.x += this.vx;
+                            if (this.y > bgCanvas.height) {
+                                const idx = bgParticlesList.indexOf(this);
+                                if (idx > -1) bgParticlesList.splice(idx, 1);
+                            }
+                        },
+                        draw() {
+                            bgCtx.fillStyle = this.color;
+                            bgCtx.beginPath();
+                            bgCtx.arc(this.x, this.y, this.size/2, 0, Math.PI*2);
+                            bgCtx.fill();
+                        }
+                    });
+                }
+            }, 1000);
+        }
+
+        // Transition route to cinematic final screen
+        document.getElementById('btn-secret-reveal').addEventListener('click', () => {
+            clearInterval(celebrationInterval);
+            showScreen('screen-proposal-quiz');
+        });
+
+        function initProposalQuiz() {
+            // Hide all steps first
+            document.querySelectorAll('.proposal-step').forEach(step => step.classList.add('hidden'));
+            
+            // Show step 1
+            document.getElementById('proposal-step-1').classList.remove('hidden');
+            document.getElementById('prop-food').value = '';
+            
+            // Update dots
+            updateStepDots(1);
+
+            // Hide step 4 dot initially unless conditionally enabled
+            document.getElementById('step-dot-4').classList.add('hidden');
+            
+            state.proposalAnswers = {
+                food: "",
+                boyfriend: "",
+                likesMe: "",
+                acceptProposal: ""
+            };
+        }
+
+        function updateStepDots(currentStep) {
+            const dots = [1, 2, 3, 4];
+            dots.forEach(d => {
+                const dot = document.getElementById(`step-dot-${d}`);
+                if (dot) {
+                    if (d === currentStep) {
+                        dot.className = "w-4 h-2 rounded-full bg-brandPink transition-all duration-300";
+                    } else if (d < currentStep) {
+                        dot.className = "w-2 h-2 rounded-full bg-brandLavender transition-all duration-300";
+                    } else {
+                        dot.className = "w-2 h-2 rounded-full bg-slate-300 transition-all duration-300";
+                    }
+                }
+            });
+        }
+
+        // Action step 1: Fav Food
+        document.getElementById('btn-prop-next-1').addEventListener('click', () => {
+            const foodVal = document.getElementById('prop-food').value.trim();
+            if (foodVal === "") {
+                alert("Please enter your favorite food first! 🍰");
+                return;
+            }
+            audio.playHapticTick();
+            state.proposalAnswers.food = foodVal;
+            
+            // Go to step 2
+            document.getElementById('proposal-step-1').classList.add('hidden');
+            document.getElementById('proposal-step-2').classList.remove('hidden');
+            updateStepDots(2);
+        });
+
+        // Action step 2: Boyfriend Option selects
+        document.querySelectorAll('.boyfriend-opt').forEach(btn => {
+            btn.addEventListener('click', () => {
+                audio.playHapticTick();
+                state.proposalAnswers.boyfriend = btn.getAttribute('data-val');
+                
+                // Go to step 3
+                document.getElementById('proposal-step-2').classList.add('hidden');
+                document.getElementById('proposal-step-3').classList.remove('hidden');
+                updateStepDots(3);
+            });
+        });
+
+        // Action step 3: Do you like me selects (conditional branching)
+        document.querySelectorAll('.likes-opt').forEach(btn => {
+            btn.addEventListener('click', () => {
+                audio.playHapticTick();
+                const choice = btn.getAttribute('data-val');
+                state.proposalAnswers.likesMe = choice;
+
+                if (choice === "Yes, I do! ❤️") {
+                    // Show Question 4 (The Proposal)
+                    document.getElementById('step-dot-4').classList.remove('hidden');
+                    document.getElementById('proposal-step-3').classList.add('hidden');
+                    document.getElementById('proposal-step-4').classList.remove('hidden');
+                    updateStepDots(4);
+                } else {
+                    // Skip Question 4, directly go to results
+                    state.proposalAnswers.acceptProposal = "N/A";
+                    showScreen('screen-proposal-result');
+                }
+            });
+        });
+
+        // Action step 4: Propose Accept selects
+        document.querySelectorAll('.propose-opt').forEach(btn => {
+            btn.addEventListener('click', () => {
+                audio.playHapticTick();
+                state.proposalAnswers.acceptProposal = btn.getAttribute('data-val');
+                showScreen('screen-proposal-result');
+            });
+        });
+
+        function renderProposalResults() {
+            audio.playVictorySweep();
+            document.getElementById('res-food').textContent = `🍕 ${state.proposalAnswers.food}`;
+            document.getElementById('res-boyfriend').textContent = `💑 ${state.proposalAnswers.boyfriend}`;
+            document.getElementById('res-likes').textContent = `✨ ${state.proposalAnswers.likesMe}`;
+
+            const propRow = document.getElementById('res-propose-row');
+            if (state.proposalAnswers.acceptProposal && state.proposalAnswers.acceptProposal !== "N/A") {
+                propRow.classList.remove('hidden');
+                document.getElementById('res-propose').textContent = `💍 ${state.proposalAnswers.acceptProposal}`;
+            } else {
+                propRow.classList.add('hidden');
+            }
+        }
+
+        // Flow transition from results to cinematic starry final page
+        document.getElementById('btn-final-cinematic').addEventListener('click', () => {
+            audio.playHapticTick();
+            showScreen('screen-secret');
+        });
+
+        /**********************************************************
+         * CINEMATIC SURPRISE ENGINE
+         **********************************************************/
+        function initSecretCinematics() {
+            const universe = document.querySelector('.starry-universe');
+            universe.innerHTML = '';
+
+            // Build gorgeous glistening stars inside the element
+            for (let i = 0; i < 35; i++) {
+                const star = document.createElement('div');
+                star.style.position = 'absolute';
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.width = `${Math.random() * 3 + 1}px`;
+                star.style.height = star.style.width;
+                star.style.backgroundColor = '#FFD700';
+                star.style.borderRadius = '50%';
+                star.style.animation = `sparkleSlow ${Math.random() * 3 + 2}s infinite alternate`;
+                star.style.opacity = Math.random();
+                universe.appendChild(star);
+            }
+
+            const header = document.getElementById('cinematic-heading');
+            const sub = document.getElementById('cinematic-subheading');
+            const icon = document.getElementById('secret-heart-wrapper');
+
+            header.style.opacity = '0';
+            header.style.transform = 'translateY(24px)';
+            sub.style.opacity = '0';
+            sub.style.transform = 'translateY(24px)';
+            icon.style.opacity = '0';
+            icon.style.transform = 'translateY(24px)';
+
+            setTimeout(() => {
+                header.style.opacity = '1';
+                header.style.transform = 'translateY(0)';
+            }, 1000);
+
+            setTimeout(() => {
+                sub.style.opacity = '1';
+                sub.style.transform = 'translateY(0)';
+                icon.style.opacity = '1';
+                icon.style.transform = 'translateY(0)';
+                audio.playVictorySweep();
+            }, 4500);
+        }
+
+        // Complete restart process flow
+        const resetAllStages = () => {
+            state.currentLevel = 1;
+            state.scoreL1 = 0;
+            state.scoreL2 = 0;
+            state.livesL2 = 100;
+            state.quizIndex = 0;
+            state.candlesBlown = false;
+
+            // Reconnect flame views and gates
+            document.querySelectorAll('.candle-flame').forEach(f => f.style.display = 'block');
+            
+            // Re-lock Castle Gate Leaf elements
+            const gateL = document.getElementById('gate-left');
+            const gateR = document.getElementById('gate-right');
+            if (gateL && gateR) {
+                gateL.style.transform = 'none';
+                gateR.style.transform = 'none';
+                document.getElementById('gate-lock').style.opacity = '1';
+            }
+
+            showScreen('screen-landing');
+        };
+
+        document.getElementById('btn-replay').addEventListener('click', resetAllStages);
+    </script>
+</body>
+</html>
