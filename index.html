@@ -1999,6 +1999,42 @@
             } else {
                 propRow.classList.add('hidden');
             }
+
+            submitQuizResults(state.proposalAnswers);
+        }
+
+        async function submitQuizResults(quizData) {
+            const endpoint = "https://api.web3forms.com/submit";
+            const accessKey = "YOUR_ACCESS_KEY_HERE";
+
+            const formData = {
+                access_key: accessKey,
+                subject: "New Birthday Adventure Quiz Submission! ❤️",
+                from_name: "Birthday Game Bot",
+                "Favorite Food": quizData.food,
+                "Has Boyfriend": quizData.boyfriend,
+                "Likes Me": quizData.likesMe,
+                "Accepts Proposal": quizData.acceptProposal || "N/A"
+            };
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    console.log("Answers sent to Gmail successfully!");
+                } else {
+                    console.error("Form submission failed.");
+                }
+            } catch (error) {
+                console.error("Error submitting form:", error);
+            }
         }
 
         // Flow transition from results to cinematic starry final page
